@@ -1,23 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import api from '../api/client'
 
 // GET /timeoff/balance -> { paid: number, sick: number }
 // POST /timeoff/request body: { type, startDate, endDate, allocationDays, attachment? }
+
 export default function TimeOff() {
+  const [balance, setBalance] = useState(null)
+  const [balanceError, setBalanceError] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ type: 'Paid time off', startDate: '', endDate: '', allocationDays: 1 })
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+
+  useEffect(() => {
+    api.get('/timeoff/balance')
+      .then((res) => setBalance(res.data))
+      .catch((err) => setBalanceError(err.response?.data?.message || 'Could not load balance.'))
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setSubmitting(true)
+    setSubmitError(null)
     try {
       await api.post('/timeoff/request', form)
-    } catch {
-      console.warn('/timeoff/request not reachable yet — closing modal anyway for demo.')
+      setShowModal(false)
+      setForm({ type: 'Paid time off', startDate: '', endDate: '', allocationDays: 1 })
+      // Refresh balance after a successful request.
+      const res = await api.get('/timeoff/balance')
+      setBalance(res.data)
+    } catch (err) {
+      setSubmitError(err.response?.data?.message || 'Could not submit the request.')
     } finally {
       setSubmitting(false)
-      setShowModal(false)
     }
   }
 
@@ -27,14 +42,20 @@ export default function TimeOff() {
         <button className="btn-primary btn-small" onClick={() => setShowModal(true)}>NEW</button>
       </div>
 
+      {balanceError && <p className="form-error">{balanceError}</p>}
+
       <div className="balance-row">
         <div className="balance-card">
           <p className="balance-label">Paid time Off</p>
-          <p className="balance-value">24 Days Available</p>
+          <p className="balance-value">
+            {balance ? `${balance.paid} Days Available` : '—'}
+          </p>
         </div>
         <div className="balance-card">
           <p className="balance-label">Sick time off</p>
-          <p className="balance-value">07 Days Available</p>
+          <p className="balance-value">
+            {balance ? `${balance.sick} Days Available` : '—'}
+          </p>
         </div>
       </div>
 
@@ -69,6 +90,8 @@ export default function TimeOff() {
             <input type="number" min="1" className="field-input"
               value={form.allocationDays}
               onChange={(e) => setForm((f) => ({ ...f, allocationDays: e.target.value }))} />
+
+            {submitError && <p className="form-error">{submitError}</p>}
 
             <div className="modal-actions">
               <button type="submit" className="btn-primary btn-small" disabled={submitting}>

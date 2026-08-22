@@ -2,12 +2,6 @@ import { useEffect, useState } from 'react'
 import api from '../api/client'
 
 // GET /employees -> [{ id, name, avatarUrl, status: 'present' | 'leave' | 'absent' }]
-const MOCK_EMPLOYEES = Array.from({ length: 6 }).map((_, i) => ({
-  id: i + 1,
-  name: `Employee ${i + 1}`,
-  avatarUrl: null,
-  status: ['present', 'leave', 'absent'][i % 3]
-}))
 
 function StatusDot({ status }) {
   if (status === 'present') return <span className="status-dot status-present" title="Present" />
@@ -16,13 +10,18 @@ function StatusDot({ status }) {
 }
 
 export default function Employees() {
-  const [employees, setEmployees] = useState(MOCK_EMPLOYEES)
+  const [employees, setEmployees] = useState([])
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
+    setLoading(true)
+    setError(null)
     api.get('/employees')
       .then((res) => setEmployees(res.data))
-      .catch(() => console.warn('Using mock employee data — /employees not reachable yet.'))
+      .catch((err) => setError(err.response?.data?.message || 'Could not load employees.'))
+      .finally(() => setLoading(false))
   }, [])
 
   const filtered = employees.filter((e) =>
@@ -40,6 +39,12 @@ export default function Employees() {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
+
+      {loading && <p className="muted">Loading employees...</p>}
+      {error && <p className="form-error">{error}</p>}
+      {!loading && !error && filtered.length === 0 && (
+        <p className="muted">No employees found.</p>
+      )}
 
       <div className="employee-grid">
         {filtered.map((emp) => (

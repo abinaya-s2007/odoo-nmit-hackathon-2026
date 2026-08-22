@@ -10,16 +10,6 @@ const AuthContext = createContext(null)
 //   -> { token: string, user: {...same shape...} }
 // If your backend uses different field names, only this file needs to change.
 
-// Fallback so the frontend is demoable even if the backend isn't ready yet.
-const MOCK_USER = {
-  id: 'mock-1',
-  name: 'Demo User',
-  email: 'demo@dayflow.io',
-  role: 'employee',
-  loginId: 'OIDEMO20260001',
-  avatarUrl: null
-}
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('dayflow_user')
@@ -45,14 +35,10 @@ export function AuthProvider({ children }) {
       setUser(data.user)
       return { ok: true }
     } catch (err) {
-      // Backend not reachable yet — let the team keep demoing the UI.
-      if (err.code === 'ERR_NETWORK') {
-        console.warn('Backend unreachable, using mock user for demo purposes.')
-        localStorage.setItem('dayflow_token', 'mock-token')
-        setUser(MOCK_USER)
-        return { ok: true, mocked: true }
-      }
-      const message = err.response?.data?.message || 'Invalid email or password.'
+      const message =
+        err.code === 'ERR_NETWORK'
+          ? 'Cannot reach the server. Check the backend is running and VITE_API_URL is correct.'
+          : err.response?.data?.message || 'Invalid email or password.'
       setError(message)
       return { ok: false, error: message }
     } finally {
@@ -69,7 +55,10 @@ export function AuthProvider({ children }) {
       setUser(data.user)
       return { ok: true }
     } catch (err) {
-      const message = err.response?.data?.message || 'Could not create account.'
+      const message =
+        err.code === 'ERR_NETWORK'
+          ? 'Cannot reach the server. Check the backend is running and VITE_API_URL is correct.'
+          : err.response?.data?.message || 'Could not create account.'
       setError(message)
       return { ok: false, error: message }
     } finally {

@@ -15,10 +15,10 @@ export default function DashboardLayout() {
     // Confirm the exact endpoint/body with your backend teammate.
     try {
       await api.post(checkedIn ? '/attendance/check-out' : '/attendance/check-in')
+      setCheckedIn((v) => !v)
     } catch (err) {
-      console.warn('Attendance endpoint not reachable yet, toggling UI only.')
+      alert(err.response?.data?.message || 'Could not update attendance. Try again.')
     }
-    setCheckedIn((v) => !v)
   }
 
   function handleLogout() {
