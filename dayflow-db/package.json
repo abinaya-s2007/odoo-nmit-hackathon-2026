@@ -1,0 +1,19 @@
+{
+  "name": "dayflow-db",
+  "version": "1.0.0",
+  "description": "Database layer for Dayflow HRMS — works with MySQL or PostgreSQL via Knex.js",
+  "main": "db/knex.js",
+  "scripts": {
+    "migrate": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:status": "knex migrate:status",
+    "seed": "knex seed:run"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "knex": "^3.1.0",
+    "mysql2": "^3.11.0",
+    "pg": "^8.12.0"
+  }
+}
