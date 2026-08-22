@@ -9,6 +9,9 @@ export default function DashboardLayout() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [checkedIn, setCheckedIn] = useState(false)
+  // Role-based access (spec 2. User Classes): Admin/HR manage employees and
+  // approve requests, Employees only see their own info.
+  const isAdmin = user?.role === 'admin' || user?.role === 'hr'
 
   async function handleCheckToggle() {
     // POST /attendance/check-in  and  POST /attendance/check-out
@@ -35,15 +38,17 @@ export default function DashboardLayout() {
 
         <nav className="topbar-tabs">
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'tab active' : 'tab')}>
-            Employees
+            {isAdmin ? 'Employees' : 'Home'}
           </NavLink>
           <NavLink to="/attendance" className={({ isActive }) => (isActive ? 'tab active' : 'tab')}>
             Attendance
           </NavLink>
           <NavLink to="/timeoff" className={({ isActive }) => (isActive ? 'tab active' : 'tab')}>
-            Time Off
+            {isAdmin ? 'Leave Approvals' : 'Time Off'}
           </NavLink>
         </nav>
+
+        {isAdmin && <span className="role-badge">{user?.role === 'admin' ? 'Admin' : 'HR'}</span>}
 
         <div className="topbar-profile">
           <button

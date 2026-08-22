@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 import api from '../api/client'
 
-// GET /attendance?date=YYYY-MM-DD
-// -> [{ employeeName, checkIn, checkOut, workHours, extraHours }]
+// Admin/HR (3.4.2 "view attendance of all employees"):
+//   GET /attendance?date=YYYY-MM-DD -> [{ employeeName, checkIn, checkOut, workHours, extraHours, status }]
+// Employee (3.4.2 "can view only their own attendance"):
+//   GET /attendance/me?date=YYYY-MM-DD -> same shape, single-employee scope
 
 export default function Attendance() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin' || user?.role === 'hr'
+
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -13,11 +19,12 @@ export default function Attendance() {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    api.get('/attendance', { params: { date } })
+    const endpoint = isAdmin ? '/attendance' : '/attendance/me'
+    api.get(endpoint, { params: { date } })
       .then((res) => setRows(res.data))
       .catch((err) => setError(err.response?.data?.message || 'Could not load attendance.'))
       .finally(() => setLoading(false))
-  }, [date])
+  }, [date, isAdmin])
 
   return (
     <div className="page">
@@ -40,21 +47,23 @@ export default function Attendance() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Employee</th>
+              {isAdmin && <th>Employee</th>}
               <th>Check In</th>
               <th>Check Out</th>
               <th>Work Hours</th>
               <th>Extra Hours</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={i}>
-                <td>{r.employeeName}</td>
-                <td>{r.checkIn}</td>
-                <td>{r.checkOut}</td>
-                <td>{r.workHours}</td>
-                <td>{r.extraHours}</td>
+                {isAdmin && <td>{r.employeeName}</td>}
+                <td>{r.checkIn || '—'}</td>
+                <td>{r.checkOut || '—'}</td>
+                <td>{r.workHours ?? '—'}</td>
+                <td>{r.extraHours ?? '—'}</td>
+                <td>{r.status ?? '—'}</td>
               </tr>
             ))}
           </tbody>

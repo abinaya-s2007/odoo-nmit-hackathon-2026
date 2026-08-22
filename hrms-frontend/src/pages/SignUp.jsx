@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import logo from '../assets/logo.png'  
 
-
+// Per the wireframe note: normal employees don't self-register — this
+// Sign Up creates the company/admin account. Admins create employee
+// logins afterward, auto-generated in the OI[Initials][Year][Serial] format.
 export default function SignUp() {
   const { signup, loading, error } = useAuth()
   const navigate = useNavigate()
@@ -36,9 +37,7 @@ export default function SignUp() {
   return (
     <div className="auth-screen">
       <form className="auth-card auth-card-wide" onSubmit={handleSubmit}>
-        <div className="auth-logo">
-  <img src={logo} alt="Company logo" className="logo-img" />
-</div>
+        <div className="auth-logo">App/Web Logo</div>
 
         <div className="field-row">
           <label className="field-label" htmlFor="companyName">Company Name :-</label>
