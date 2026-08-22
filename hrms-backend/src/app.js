@@ -13,7 +13,19 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
+// IMPORTANT: Express enables ETag caching by default, which makes GET
+// requests return "304 Not Modified" with no body on repeat calls.
+// axios treats any non-2xx status (304 included) as an error, so every
+// re-fetch of the same endpoint (dashboard, employees, attendance...)
+// would fail on the frontend even though the backend is fine. Since
+// these are live JSON API responses (not static assets), disable it.
+app.set('etag', false);
+
 app.use(cors()); // hackathon-friendly: allow any origin
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 app.use(express.json());
 app.use(morgan('dev'));
 
